@@ -105,6 +105,18 @@ kv_namespaces = [
 # put real values in `wrangler secret put` instead
 ```
 
+
+## the f4rkh4d ai-tooling stack
+
+small, focused tools that compose. use any one alone, all together if you need:
+
+- [`anchor`](https://github.com/fr-enterprises/anchor) - local proxy that caches AI API calls and tracks spend
+- [`llm-pricing`](https://github.com/f4rkh4d/llm-pricing) - usd list prices for major LLM apis
+- [`anthropic-sse`](https://github.com/f4rkh4d/anthropic-sse) - streaming sse parser for anthropic messages api
+- [`openai-stream-parse`](https://github.com/f4rkh4d/openai-stream-parse) - same, for openai chat completions
+- [`tg-bot-cf`](https://github.com/f4rkh4d/tg-bot-cf) - tiny telegram bot framework for cloudflare workers
+- [`bun-spawn-safe`](https://github.com/f4rkh4d/bun-spawn-safe) - hardened wrapper around `Bun.spawn`
+
 ## license
 
 MIT
