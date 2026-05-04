@@ -203,3 +203,50 @@ function chunkText(text: string, size: number): string[] {
   }
   return out;
 }
+
+/**
+ * Convenience: build a partial BotEnv from a Cloudflare Workers `env` object
+ * using conventional secret names. Lets users avoid wiring up the same
+ * boilerplate in every bot.
+ *
+ * Reads:
+ *   TG_BOT_TOKEN          -> tgBotToken
+ *   TG_WEBHOOK_SECRET     -> webhookSecret
+ *   TG_OWNER_CHAT_ID      -> ownerChatIds (single string; comma-separated for many)
+ *   MEMORY (kv binding)   -> memoryKv
+ *
+ * The user is still responsible for supplying `llm` and optional `commands`.
+ * Throws if any required secret/binding is missing or empty.
+ */
+export function loadFromEnv(env: Record<string, unknown>): {
+  tgBotToken: string;
+  webhookSecret: string;
+  ownerChatIds: string[];
+  memoryKv: MinimalKv;
+} {
+  const tgBotToken = readString(env, "TG_BOT_TOKEN");
+  const webhookSecret = readString(env, "TG_WEBHOOK_SECRET");
+  const ownerRaw = readString(env, "TG_OWNER_CHAT_ID");
+  const ownerChatIds = ownerRaw.split(",").map((s) => s.trim()).filter(Boolean);
+  if (!ownerChatIds.length) throw new Error("TG_OWNER_CHAT_ID resolved to empty list");
+
+  const kv = env["MEMORY"];
+  if (!isMinimalKv(kv)) throw new Error("MEMORY binding missing or not a KV namespace");
+
+  return { tgBotToken, webhookSecret, ownerChatIds, memoryKv: kv };
+}
+
+function readString(env: Record<string, unknown>, key: string): string {
+  const v = env[key];
+  if (typeof v !== "string" || !v) throw new Error(`env.${key} missing or empty`);
+  return v;
+}
+
+function isMinimalKv(v: unknown): v is MinimalKv {
+  return (
+    typeof v === "object" && v !== null &&
+    typeof (v as { get?: unknown }).get === "function" &&
+    typeof (v as { put?: unknown }).put === "function" &&
+    typeof (v as { delete?: unknown }).delete === "function"
+  );
+}

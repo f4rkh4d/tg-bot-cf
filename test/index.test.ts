@@ -1,5 +1,5 @@
 import { test, expect, beforeEach, mock } from "bun:test";
-import { createBot, type BotEnv, type ChatMessage, type MinimalKv, type MinimalExecutionContext } from "../src/index";
+import { createBot, loadFromEnv, type BotEnv, type ChatMessage, type MinimalKv, type MinimalExecutionContext } from "../src/index";
 
 function makeKv(): MinimalKv & { store: Map<string, string> } {
   const store = new Map<string, string>();
@@ -316,4 +316,47 @@ test("unknown command replies with usage hint", async () => {
   await Promise.all(ctx.waited);
   expect(fetchMock.calls[0]?.body?.text).toContain("unknown command");
   fetchMock.restore();
+});
+
+test("loadFromEnv: parses required secrets and bindings", () => {
+  const kv = makeKv();
+  const out = loadFromEnv({
+    TG_BOT_TOKEN: "12345:ABC",
+    TG_WEBHOOK_SECRET: "whs",
+    TG_OWNER_CHAT_ID: "111",
+    MEMORY: kv,
+  });
+  expect(out.tgBotToken).toBe("12345:ABC");
+  expect(out.webhookSecret).toBe("whs");
+  expect(out.ownerChatIds).toEqual(["111"]);
+  expect(out.memoryKv).toBe(kv);
+});
+
+test("loadFromEnv: TG_OWNER_CHAT_ID supports comma-separated list", () => {
+  const kv = makeKv();
+  const out = loadFromEnv({
+    TG_BOT_TOKEN: "x",
+    TG_WEBHOOK_SECRET: "y",
+    TG_OWNER_CHAT_ID: "111, 222 ,333",
+    MEMORY: kv,
+  });
+  expect(out.ownerChatIds).toEqual(["111", "222", "333"]);
+});
+
+test("loadFromEnv: throws on missing secret", () => {
+  const kv = makeKv();
+  expect(() => loadFromEnv({ TG_WEBHOOK_SECRET: "y", TG_OWNER_CHAT_ID: "1", MEMORY: kv })).toThrow(/TG_BOT_TOKEN/);
+});
+
+test("loadFromEnv: throws on missing KV binding", () => {
+  expect(() =>
+    loadFromEnv({ TG_BOT_TOKEN: "x", TG_WEBHOOK_SECRET: "y", TG_OWNER_CHAT_ID: "1" }),
+  ).toThrow(/MEMORY/);
+});
+
+test("loadFromEnv: throws on empty owner list after parse", () => {
+  const kv = makeKv();
+  expect(() =>
+    loadFromEnv({ TG_BOT_TOKEN: "x", TG_WEBHOOK_SECRET: "y", TG_OWNER_CHAT_ID: ", , ,", MEMORY: kv }),
+  ).toThrow(/empty list/);
 });
