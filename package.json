@@ -1,0 +1,50 @@
+{
+  "name": "tg-bot-cf",
+  "version": "0.1.0",
+  "description": "Tiny framework for owner-only Telegram bots on Cloudflare Workers. Webhook verification, KV-backed memory, pluggable LLM. Zero deps.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run typecheck && bun test && bun run build"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "cloudflare",
+    "workers",
+    "webhook",
+    "kv",
+    "llm",
+    "chatbot"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/f4rkh4d/tg-bot-cf.git"
+  },
+  "homepage": "https://github.com/f4rkh4d/tg-bot-cf",
+  "bugs": "https://github.com/f4rkh4d/tg-bot-cf/issues",
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20240821.1",
+    "@types/bun": "1.1.6",
+    "typescript": "5.5.4"
+  }
+}
